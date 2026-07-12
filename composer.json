@@ -1,16 +1,25 @@
 {
     "name": "kniebes/io-atmosphere",
+    "description": "AT-Protocol-Client und standard.site-Records (Publication/Document) für Blog-Syndication",
     "type": "library",
+    "license": "MIT",
     "autoload": {
         "psr-4": {
             "Kniebes\\IoAtmosphere\\": "src/"
         }
     },
+    "bin": [
+        "bin/atmosphere-create-publication.php"
+    ],
     "authors": [
         {
             "name": "Markus Kniebes",
             "email": "mk@kniebes.io"
         }
     ],
-    "require": {}
+    "require": {
+        "php": ">=8.3",
+        "ext-curl": "*",
+        "ext-json": "*"
+    }
 }
