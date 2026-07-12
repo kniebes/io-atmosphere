@@ -1,0 +1,16 @@
+{
+    "name": "kniebes/io-atmosphere",
+    "type": "library",
+    "autoload": {
+        "psr-4": {
+            "Kniebes\\IoAtmosphere\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Markus Kniebes",
+            "email": "mk@kniebes.io"
+        }
+    ],
+    "require": {}
+}
