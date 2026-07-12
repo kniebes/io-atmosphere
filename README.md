@@ -4,10 +4,29 @@ Plattformunabhängiger AT-Protocol-Client mit [standard.site](https://standard.s
 
 ## Bausteine
 
-- `Client\AtProtoClient`: XRPC-Client für einen PDS (`login` per App-Password, `putRecord`, `getRecord`, `deleteRecord`, `uploadBlob`)
+- `Client\AtProtoClient`: XRPC-Client für einen PDS (`login` per App-Password, `putRecord`, `createRecord`, `getRecord`, `deleteRecord`, `uploadBlob`)
 - `StandardSite\PublicationRecord`: `site.standard.publication` (einmalig pro Blog)
-- `StandardSite\DocumentRecord`: `site.standard.document` (pro Artikel)
+- `StandardSite\DocumentRecord`: `site.standard.document` (pro Artikel), optional mit Markdown-Volltext (`markdownContent`) und Verweis auf einen Bluesky-Post (`bskyPostRef`)
 - `StandardSite\StandardSitePublisher`: legt Records an, aktualisiert und löscht sie; ein stabiler Record-Key pro Artikel macht erneutes Publizieren zum Update
+- `Bluesky\BlueskyPostBuilder`: baut `app.bsky.feed.post`-Records; Links und Hashtags werden als Facets mit korrekten UTF-8-Byte-Offsets angehängt, Link-Card oder Bilder als Embed, max. 300 Grapheme
+
+```php
+use Kniebes\IoAtmosphere\Bluesky\BlueskyPostBuilder;
+
+$post = (new BlueskyPostBuilder())
+    ->setLangs(['de'])
+    ->addText('Neuer Blogpost!')
+    ->addText("\n\n")
+    ->addTag('PHP')
+    ->setExternalEmbed(
+        uri: 'https://example.com/2026/7/12/neuer-blogpost.html',
+        title: 'Neuer Blogpost',
+        description: 'Teaser…',
+        thumb: $blob
+    );
+$result = $client->createRecord(collection: BlueskyPostBuilder::TYPE, record: $post->toArray());
+// $result['uri'] + $result['cid'] als bskyPostRef ins Document
+```
 
 ## Verwendung
 

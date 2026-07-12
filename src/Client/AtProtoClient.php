@@ -68,6 +68,30 @@ class AtProtoClient
     }
 
     /**
+     * Legt einen Record mit servergeneriertem Record-Key (TID) an, z. B. app.bsky.feed.post.
+     *
+     * @throws AtProtoException
+     */
+    public function createRecord(string $collection, array $record): array
+    {
+        $session = $this->requireSession();
+
+        return $this->sendRequest(
+            method: 'POST',
+            nsid: 'com.atproto.repo.createRecord',
+            body: json_encode(
+                [
+                    'repo' => $session->did,
+                    'collection' => $collection,
+                    'record' => $record,
+                ],
+                JSON_UNESCAPED_SLASHES
+            ),
+            contentType: 'application/json'
+        );
+    }
+
+    /**
      * @throws AtProtoException
      */
     public function getRecord(string $collection, string $recordKey, ?string $repo = null): array

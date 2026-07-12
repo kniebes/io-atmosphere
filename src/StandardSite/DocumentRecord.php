@@ -15,6 +15,7 @@ readonly class DocumentRecord
      * @param string $site AT-URI des Publication-Records ("at://…") oder Publikations-URL ("https://…")
      * @param array $coverImage Blob-Referenz aus AtProtoClient::uploadBlob()
      * @param string $markdownContent Volltext als Markdown, landet in der content-Union
+     * @param array $bskyPostRef strongRef ['uri' => …, 'cid' => …] auf den zugehörigen Bluesky-Post
      */
     public function __construct(
         public string $site,
@@ -27,6 +28,7 @@ readonly class DocumentRecord
         public ?DateTimeInterface $updatedAt = null,
         public ?array $coverImage = null,
         public ?string $markdownContent = null,
+        public ?array $bskyPostRef = null,
     ) {
     }
 
@@ -62,6 +64,9 @@ readonly class DocumentRecord
                 '$type' => self::CONTENT_TYPE_MARKDOWN,
                 'text' => $this->markdownContent,
             ];
+        }
+        if ($this->bskyPostRef !== null) {
+            $record['bskyPostRef'] = $this->bskyPostRef;
         }
 
         return $record;
