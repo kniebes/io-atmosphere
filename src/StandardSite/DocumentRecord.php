@@ -9,10 +9,12 @@ use DateTimeZone;
 readonly class DocumentRecord
 {
     public const string TYPE = 'site.standard.document';
+    public const string CONTENT_TYPE_MARKDOWN = 'site.standard.content.markdown';
 
     /**
      * @param string $site AT-URI des Publication-Records ("at://…") oder Publikations-URL ("https://…")
      * @param array $coverImage Blob-Referenz aus AtProtoClient::uploadBlob()
+     * @param string $markdownContent Volltext als Markdown, landet in der content-Union
      */
     public function __construct(
         public string $site,
@@ -24,6 +26,7 @@ readonly class DocumentRecord
         public array $tags = [],
         public ?DateTimeInterface $updatedAt = null,
         public ?array $coverImage = null,
+        public ?string $markdownContent = null,
     ) {
     }
 
@@ -53,6 +56,12 @@ readonly class DocumentRecord
         }
         if ($this->coverImage !== null) {
             $record['coverImage'] = $this->coverImage;
+        }
+        if ($this->markdownContent !== null && $this->markdownContent !== '') {
+            $record['content'] = [
+                '$type' => self::CONTENT_TYPE_MARKDOWN,
+                'text' => $this->markdownContent,
+            ];
         }
 
         return $record;

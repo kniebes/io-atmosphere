@@ -35,7 +35,8 @@ $documentUri = $publisher->publishDocument(
         site: $publicationUri,
         title: 'Hallo Atmosphere',
         publishedAt: new DateTimeImmutable('2026-07-12 10:00:00'),
-        path: '/2026/7/12/hallo-atmosphere.html'
+        path: '/2026/7/12/hallo-atmosphere.html',
+        markdownContent: 'Volltext als **Markdown**, landet als site.standard.content.markdown in der content-Union.'
     )
 );
 ```
