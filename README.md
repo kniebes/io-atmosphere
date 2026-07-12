@@ -60,6 +60,10 @@ $documentUri = $publisher->publishDocument(
 );
 ```
 
+## Vollständiges Beispiel
+
+[`examples/BlogSyndication.php`](examples/BlogSyndication.php) zeigt die komplette Integration in ein Blog: Publish mit Cover-Upload, Bluesky-Post nur beim ersten Veröffentlichen (mit `bskyPostRef` im Document, darüber können Reader Bluesky-Antworten als Kommentare anzeigen), Update per stabilem Record-Key und Depublizieren, das Document und Bluesky-Post wieder entfernt. App-spezifisch ist nur das kleine `SyndicationStateStorage`-Interface für die Persistenz der Referenzen.
+
 ## CLI: Publication anlegen
 
 ```
