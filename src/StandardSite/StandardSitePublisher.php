@@ -3,6 +3,7 @@
 namespace Kniebes\IoAtmosphere\StandardSite;
 
 use Kniebes\IoAtmosphere\Client\AtProtoClient;
+use Kniebes\IoAtmosphere\Client\Tid;
 use Kniebes\IoAtmosphere\Exception\AtProtoException;
 
 class StandardSitePublisher
@@ -32,7 +33,7 @@ class StandardSitePublisher
      */
     public function publishDocument(string $recordKey, DocumentRecord $document): string
     {
-        $this->assertValidRecordKey($recordKey);
+        $this->assertValidTid($recordKey);
 
         $result = $this->client->putRecord(
             collection: DocumentRecord::TYPE,
@@ -75,6 +76,16 @@ class StandardSitePublisher
     {
         if (in_array($recordKey, ['.', '..'], true) || !preg_match('/^[A-Za-z0-9._:~-]{1,512}$/', $recordKey)) {
             throw new AtProtoException('Ungültiger Record-Key: ' . $recordKey);
+        }
+    }
+
+    /**
+     * @throws AtProtoException
+     */
+    private function assertValidTid(string $recordKey): void
+    {
+        if (!Tid::isValid($recordKey)) {
+            throw new AtProtoException('Record-Key ist keine gültige TID: ' . $recordKey);
         }
     }
 }

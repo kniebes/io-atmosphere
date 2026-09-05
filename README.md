@@ -7,7 +7,8 @@ Plattformunabhängiger AT-Protocol-Client mit [standard.site](https://standard.s
 - `Client\AtProtoClient`: XRPC-Client für einen PDS (`login` per App-Password, `putRecord`, `createRecord`, `getRecord`, `deleteRecord`, `uploadBlob`)
 - `StandardSite\PublicationRecord`: `site.standard.publication` (einmalig pro Blog)
 - `StandardSite\DocumentRecord`: `site.standard.document` (pro Artikel), optional mit Markdown-Volltext (`markdownContent`) und Verweis auf einen Bluesky-Post (`bskyPostRef`)
-- `StandardSite\StandardSitePublisher`: legt Records an, aktualisiert und löscht sie; ein stabiler Record-Key pro Artikel macht erneutes Publizieren zum Update
+- `StandardSite\StandardSitePublisher`: legt Records an, aktualisiert und löscht sie; der Record-Key eines Documents muss eine TID sein, und wer sie pro Artikel festhält, macht erneutes Publizieren zum Update
+- `Client\Tid`: erzeugt und prüft TIDs (base32-sortable, 13 Zeichen), `Tid::fromTimestamp()` leitet sie aus dem Veröffentlichungsdatum ab
 - `Bluesky\BlueskyPostBuilder`: baut `app.bsky.feed.post`-Records; Links und Hashtags werden als Facets mit korrekten UTF-8-Byte-Offsets angehängt, Link-Card oder Bilder als Embed, max. 300 Grapheme
 
 ```php
@@ -32,6 +33,7 @@ $result = $client->createRecord(collection: BlueskyPostBuilder::TYPE, record: $p
 
 ```php
 use Kniebes\IoAtmosphere\Client\AtProtoClient;
+use Kniebes\IoAtmosphere\Client\Tid;
 use Kniebes\IoAtmosphere\StandardSite\DocumentRecord;
 use Kniebes\IoAtmosphere\StandardSite\PublicationRecord;
 use Kniebes\IoAtmosphere\StandardSite\StandardSitePublisher;
@@ -49,7 +51,7 @@ $publicationUri = $publisher->publishPublication(
 
 // Pro Artikel: Document anlegen oder aktualisieren
 $documentUri = $publisher->publishDocument(
-    recordKey: '123',
+    recordKey: Tid::fromTimestamp(strtotime('2026-07-12 10:00:00')),
     document: new DocumentRecord(
         site: $publicationUri,
         title: 'Hallo Atmosphere',
@@ -62,7 +64,7 @@ $documentUri = $publisher->publishDocument(
 
 ## Vollständiges Beispiel
 
-[`examples/BlogSyndication.php`](examples/BlogSyndication.php) zeigt die komplette Integration in ein Blog: Publish mit Cover-Upload, Bluesky-Post nur beim ersten Veröffentlichen (mit `bskyPostRef` im Document, darüber können Reader Bluesky-Antworten als Kommentare anzeigen), Update per stabilem Record-Key und Depublizieren, das Document und Bluesky-Post wieder entfernt. App-spezifisch ist nur das kleine `SyndicationStateStorage`-Interface für die Persistenz der Referenzen.
+[`examples/BlogSyndication.php`](examples/BlogSyndication.php) zeigt die komplette Integration in ein Blog: Publish mit Cover-Upload, Bluesky-Post nur beim ersten Veröffentlichen (mit `bskyPostRef` im Document, darüber können Reader Bluesky-Antworten als Kommentare anzeigen), Update über den aus der gespeicherten Document-URI wiederverwendeten TID-Record-Key und Depublizieren, das Document und Bluesky-Post wieder entfernt. App-spezifisch ist nur das kleine `SyndicationStateStorage`-Interface für die Persistenz der Referenzen.
 
 ## CLI: Publication anlegen
 

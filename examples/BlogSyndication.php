@@ -5,8 +5,9 @@
  *
  * Zeigt den kompletten Syndication-Ablauf mit diesem Package:
  *  - Publish: Cover hochladen, beim ersten Mal einen Bluesky-Post erstellen,
- *    Document mit bskyPostRef publizieren (stabiler Record-Key = Post-ID,
- *    erneutes Publizieren wird dadurch zum Update)
+ *    Document mit bskyPostRef publizieren (Record-Key ist eine TID, beim ersten
+ *    Mal aus dem Veröffentlichungsdatum erzeugt und danach aus der gespeicherten
+ *    Document-URI wiederverwendet, erneutes Publizieren wird dadurch zum Update)
  *  - Depublish: Document und Bluesky-Post löschen
  *
  * Die Klasse wird nach jedem Speichern eines Posts aufgerufen (z. B. aus einem
@@ -23,6 +24,7 @@ namespace Kniebes\IoAtmosphere\Examples;
 use finfo;
 use Kniebes\IoAtmosphere\Bluesky\BlueskyPostBuilder;
 use Kniebes\IoAtmosphere\Client\AtProtoClient;
+use Kniebes\IoAtmosphere\Client\Tid;
 use Kniebes\IoAtmosphere\StandardSite\DocumentRecord;
 use Kniebes\IoAtmosphere\StandardSite\StandardSitePublisher;
 use DateTimeInterface;
@@ -99,7 +101,7 @@ class BlogSyndication
         $bskyPostRef = $this->ensureBlueskyPost(post: $post, coverImage: $coverImage);
 
         $documentUri = $this->getPublisher()->publishDocument(
-            recordKey: $post->id,
+            recordKey: $this->resolveDocumentRecordKey($post),
             document: new DocumentRecord(
                 site: $this->publicationUri,
                 title: $post->title,
@@ -119,20 +121,43 @@ class BlogSyndication
 
     public function retractPost(string $postId): void
     {
-        if ($this->storage->loadDocumentUri($postId) !== null) {
-            $this->getPublisher()->deleteDocument(recordKey: $postId);
+        $documentUri = $this->storage->loadDocumentUri($postId);
+        if ($documentUri !== null) {
+            $this->getPublisher()->deleteDocument(recordKey: $this->extractRecordKey($documentUri));
             $this->storage->deleteDocumentUri($postId);
         }
 
         $postRef = $this->storage->loadBlueskyPostRef($postId);
         if ($postRef !== null) {
-            $uriParts = explode('/', $postRef['uri']);
             $this->getClient()->deleteRecord(
                 collection: BlueskyPostBuilder::TYPE,
-                recordKey: (string) end($uriParts)
+                recordKey: $this->extractRecordKey($postRef['uri'])
             );
             $this->storage->deleteBlueskyPostRef($postId);
         }
+    }
+
+    /**
+     * Der Record-Key eines Documents muss eine TID sein. Beim ersten Publish wird
+     * sie aus dem Veröffentlichungsdatum erzeugt, danach steckt sie in der
+     * gespeicherten Document-URI und bleibt darüber stabil.
+     */
+    private function resolveDocumentRecordKey(BlogPost $post): string
+    {
+        $documentUri = $this->storage->loadDocumentUri($post->id);
+        $recordKey = $this->extractRecordKey($documentUri ?? '');
+        if (Tid::isValid($recordKey)) {
+            return $recordKey;
+        }
+
+        return Tid::fromTimestamp($post->publishedAt->getTimestamp());
+    }
+
+    private function extractRecordKey(string $atUri): string
+    {
+        $uriParts = explode('/', $atUri);
+
+        return (string) end($uriParts);
     }
 
     /**
